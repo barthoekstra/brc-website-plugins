@@ -1,0 +1,403 @@
+<style>
+    .disguised-selector {
+        position: relative;
+        display: inline-block;
+        background-color: transparent;
+        z-index: 10;
+    }
+
+    .disguised-selector select {
+        border: none;
+        outline: none;
+        background: transparent;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 0;
+        margin: 0;
+        display: inline-block;
+        width: 100%;
+        padding: 0 40px 0 15px;
+        color: #ffffff;
+        line-height: calc((var(--heading-1-size-value) - 1) * 1.2vw + 1rem);
+        border-bottom: 1px solid #ffffff;
+    }
+
+    .disguised-selector select:focus {
+        outline:none;
+    }
+
+    .disguised-selector option {
+	color: #000000;
+    }
+
+    .disguised-selector:after {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 50px;
+        height: 100%;
+        content: "∨";
+        font-weight: 800;
+        text-align: center;
+        color: #ffffff;
+        font-size: 24px;
+        z-index: -1;
+    }
+
+    #seasontotal {
+        text-align: right;
+    }
+
+    @media (max-width: 799px) {
+        #seasontotal {
+            text-align: left;
+        }
+
+        .disguised-selector select {
+            line-height: calc((var(--heading-1-size-value) - 1) * 1.2vw + 2rem);
+        }
+    }
+</style>
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
+
+<script>
+    $(document).ready(function () {
+        $.ajaxSetup({
+            cache: false
+        });
+
+        // Default values
+        var trektellen_lang = (typeof trektellen_lang != 'undefined') ? trektellen_lang : "english";
+        var trektellen_totalraptors = (typeof trektellen_totalraptors != 'undefined') ? trektellen_totalraptors : false;
+        var trektellen_totalall = (typeof trektellen_totalall != 'undefined') ? trektellen_totalall : false;
+        var trektellen_totalraptorsandstorks = (typeof trektellen_totalraptorsandstorks != 'undefined') ? trektellen_totalraptorsandstorks : false;
+        var trektellen_ringing = (typeof trektellen_ringing != 'undefined') ? trektellen_ringing : false;
+
+        // Site values
+        var trektellen_year = "2025";
+        var trektellen_species = "86,102,88,592,95,105,98,97";
+        var trektellen_species_list = [86, 102, 88, 592, 95, 105, 98, 97]; // Focal species (for the gallery)
+        //var trektellen_other_species = "31,32,109,578,1014,92,94,106,1156,588,589,1019,100,99,96,91,103,101,129,232,233,235,255,597,115,599,598,506,507,104,1151,602,1102,912,584,1150,586,997,981,624,999";
+        var trektellen_all_species_autumn = "86,87,102,88,592,95,105,98,96,97,31,32,528,109,578,1014,92,93,94,577,106,107,1156,588,589,96,91,101,129,232,233,235,255,597,115,599,598,506,507,104,1151,1102,912,584,1150,586,997,981,624,999,96,718,103";
+        var trektellen_all_species_spring = "86,87,102,88,592,95,105,98,96,97,31,32,109,578,1014,92,93,94,106,107,1156,588,589,1019,96,91,101,129,232,233,235,255,597,115,599,598,506,507,104,1151,1102,912,584,1150,586,997,981,624,999,96,100,103,246,593,110,1100,113,1101,112,111";
+        var trektellen_all_species = trektellen_all_species_autumn;
+        var trektellen_sites = "1047,1048";
+        var trektellen_season = -2; // Should be -2 in Autumn, -1 for Spring
+
+        // We have so far counted...
+        function countTotal() {
+            $.ajax({
+                url: 'https://trektellen.nl/ajax/species_totals/' + trektellen_year + '/' + trektellen_season + '/?sites=' + trektellen_sites + '&species=raptors',
+                dataType: 'jsonp',
+                jsonpCallback: "species_totals_a",
+                error: (function () {
+                    console.log("Error total");
+                }),
+                success: (function (result) {
+                    $.each(result, function (i, field) {
+                        var total = field.total || "0";
+                        $("#trektellen_total").html(addThousandSeparators(total) + ' raptors');
+                    });
+                })
+            });
+        }
+
+        function addThousandSeparators(number) {
+            var numberString = number.toString();
+            if (numberString.length > 4) {
+                var reversedString = numberString.split('').reverse().join('');
+                var formattedString = reversedString.replace(/(\d{3})(?=\d)/g, '$1 ');
+                var formattedNumber = formattedString.split('').reverse().join('');
+                return formattedNumber;
+            } else {
+                return numberString
+            }
+        }
+
+        function countPeriod() {
+            var period;
+            if (trektellen_season == -2) {
+                if (parseInt(trektellen_year) <= 2018) {
+                    period = 'August 17th &ndash; October 16th, ' + trektellen_year;
+                } else {
+                    period = 'August 12th &ndash; October 21st, ' + trektellen_year;
+                }
+            } else {
+                if (parseInt(trektellen_year) == 2019) {
+                    period = 'March 21st &ndash; May 31st, ' + trektellen_year;
+                } else if (parseInt(trektellen_year) == 2020) {
+                    period = 'March 1st &ndash; May 25th, ' + trektellen_year;
+                } else if (parseInt(trektellen_year) == 2022) {
+                    period = 'March 1st &ndash; May 26th, ' + trektellen_year;
+                }
+            }
+            $('#countperiod').html(period);
+        }
+
+        function speciesSoFar() {
+            var tt_alltext = "";
+          $(".hlspeciestotal").html(0);
+
+            $.ajax({
+                url: 'https://trektellen.nl/ajax/species_totals/' + trektellen_year + '/' + trektellen_season + '/?sites=' + trektellen_sites + '&species=' + trektellen_all_species + '&season=' + trektellen_season + '&language=' + trektellen_lang + '&callback=?',
+                dataType: 'jsonp',
+                jsonpCallback: "species_totals",
+                error: (function () {
+                    console.log("Error all species");
+                }),
+                success: (function (result) {
+                    $.each(result, function (i, field) {
+                        if ($.inArray(Number(field.id), trektellen_species_list) == -1) {
+                            if (Number(field.total) > 0) {
+                                if (Number(field.total) > 1 && !field.name.match(' sp$') && !field.name.match(' sp.$')) {
+                                    field.name = field.name + 's'
+                                }
+                                tt_alltext = tt_alltext + "<span class=\"species\"><span class=\"total\">" + addThousandSeparators(field.total) + "</span><strong>" + field.name + "</strong></span>";
+                            }
+                        } else {
+                            $("#" + field.name.replace(/['"]/g, '').toLowerCase().replace(/\s/g, '')).html(addThousandSeparators(field.total));
+                        }
+                    });
+                    tt_alltext = tt_alltext.slice(0, -2);
+                    if (tt_alltext) {
+                        $("#other_species_autumn").html("<p>" + tt_alltext + "</p>");
+                    } else {
+                        $("#other_species_autumn").empty();
+                    }
+                })
+            });
+        }
+
+        function updateYears() {
+            var $yearSelect = $('select#year');
+            $yearSelect.empty();
+
+            var availableYears = [];
+
+            if (trektellen_season === "-1") {
+                availableYears = ["2022", "2020", "2019"];
+            } else {
+                availableYears = ["2025", "2024", "2023", "2022", "2021", "2019", "2018", "2017", "2016", "2015", "2014", "2013", "2012", "2011", "2010", "2009", "2008"];
+            }
+
+            if (availableYears.indexOf(trektellen_year) === -1) {
+                trektellen_year = availableYears[0]
+            }
+
+            $.each(availableYears, function (index, year) {
+                var option = $('<option>', { value: year, text: year });
+
+                if (year === trektellen_year) {
+                    console.log(trektellen_year)
+                    option.attr('selected', 'selected');
+                }
+                $yearSelect.append(option);
+            });
+        }
+
+        function updateData() {
+            updateYears();
+            countTotal();
+            countPeriod();
+            speciesSoFar();
+        }
+
+        // Event handler for the change event of the <select> element
+        $('#year').on('change', function () {
+            trektellen_year = $(this).val();
+            updateData();
+        });
+
+        $('#season').on('change', function () {
+            trektellen_season = $(this).val();
+            if (trektellen_season == "-2") {
+                trektellen_all_species = trektellen_all_species_autumn
+            } else {
+                trektellen_all_species = trektellen_all_species_spring
+            }
+            updateData();
+        });
+
+        updateData();
+
+
+        $('#mcd-raptors').DataTable({
+            fixedColumns: true,
+            scrollX: true,
+            scrollCollapse: true,
+            paging: false,
+            ordering: false,
+            info: false
+        });
+        $('#mcd-raptors-new').DataTable({
+            fixedColumns: true,
+            scrollX: true,
+            scrollCollapse: true,
+            paging: false,
+            ordering: false,
+            info: false
+        });
+        $('#mcd-non-raptors').DataTable({
+            fixedColumns: true,
+            scrollX: true,
+            scrollCollapse: true,
+            paging: false,
+            ordering: false,
+            info: false
+        });
+
+    });
+</script>
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css"
+    href="//cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css" />
+<style>
+    #migration-count-data-daily div.Index-page-content,
+    #migration-count-data-current-season-total div.Index-page-content,
+    #migration-count-data-below-gallery div.Index-page-content,
+    #migration-count-data-previous-season-total div.Index-page-content {
+        padding-bottom: 0px;
+    }
+
+    #migration-count-data-current-season-total div.Index-page-content .sqs-block-image,
+    #migration-count-data-previous-season-total div.Index-page-content .sqs-block-image {
+        padding-bottom: 0px;
+    }
+
+    #migration-count-data-current-season-total div.Index-page-content .sqs-block.code-block.sqs-block-code,
+    #migration-count-data-previous-season-total div.Index-page-content .sqs-block.code-block.sqs-block-code {
+        padding-top: 0px;
+    }
+
+    #migration-count-data-annual div.Index-page-content {
+        padding-top: 0px;
+    }
+
+    td:empty:after {
+        content: "\00a0";
+    }
+
+    #mcd-raptors tr:last-of-type {
+        font-weight: bold;
+    }
+
+    #mcd-raptors tbody tr.group td {
+        font-weight: bold;
+    }
+
+    #mcd-non-raptors tr:last-of-type {
+        font-weight: bold;
+    }
+
+    h1,
+    h2,
+    h3 {
+        word-break: normal;
+    }
+
+    .trektellen {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .trektellen h1 {
+        line-height: 1.5em !important;
+        font-size: 17px !important;
+    }
+
+    .trektellen a {
+        text-decoration: underline;
+    }
+
+    .trektellen table {
+        width: 95%;
+        font-size: 0.9em;
+    }
+
+    .trektellen table table.tabelrand {
+        width: 100%;
+    }
+
+    .trektellen>p:first-of-type {
+        display: none;
+    }
+
+    .trektellen>p:last-of-type {
+        display: none;
+    }
+
+    .trektellen #left_content center br {
+        display: none;
+    }
+
+    div#other_species_autumn p {
+        line-height: 2.5em;
+    }
+
+    span.species {
+        display: inline-block;
+        color: #fff;
+        height: 2em;
+        line-height: 2em;
+        margin: 0 0.25em;
+    }
+
+    span.species strong {
+        display: inline-block;
+        height: 2em;
+        line-height: 2em;
+        background-color: rgb(13, 13, 13);
+        padding: 0 10px 0 10px;
+        border-radius: 0 3px 3px 0;
+        font-weight: normal;
+    }
+
+    span.species span.total {
+        display: inline-block;
+        height: 2em;
+        line-height: 2em;
+        background-color: #4a9147;
+        padding: 0 10px;
+        border-radius: 3px 0 0 3px;
+        min-width: 1em;
+        text-align: center;
+    }
+
+    #left_content p:first-of-type {
+        background: rgb(13, 13, 13);
+        display: block;
+        min-height: 2em;
+        line-height: 2em;
+        padding: 0 0.5em;
+        color: #fff;
+    }
+
+    #left_content p:first-of-type select {
+        color: #000;
+        height: 100%;
+        display: inline-block;
+    }
+
+    #migration-count-data-current-season-additional-species div.Index-page-content,
+    #migration-count-data-previous-season-additional-species div.Index-page-content {
+        width: 100%;
+        max-width: none;
+        margin: 0 auto;
+        padding-top: 40px;
+    }
+
+    #migration-count-data-current-season-additional-species div.Index-page-content div,
+    #migration-count-data-previous-season-additional-species div.Index-page-content div {
+        width: 100%;
+    }
+
+    #migration-count-data-spacer.Index-page.Index-page--has-image {
+        min-height: 0;
+        padding-bottom: 15px;
+        padding-top: 15px;
+    }
+</style>
