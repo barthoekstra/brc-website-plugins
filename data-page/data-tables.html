@@ -1,3 +1,6 @@
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<link href="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.3.2/fc-5.0.4/fh-4.0.3/sc-2.4.3/datatables.min.css" rel="stylesheet" integrity="sha384-S6qDA0tdnRKgz2rX+recfGcKqee9YmUazViV1Mi/lKQiqwUbPGDCwtyHB5KBFFPV" crossorigin="anonymous">
+<script src="https://cdn.datatables.net/v/dt/jq-3.7.0/dt-2.3.2/fc-5.0.4/fh-4.0.3/sc-2.4.3/datatables.min.js" integrity="sha384-euPyBZu1kn6qD4gOgYiO7ZwGv9xRPQ1DxnwDMbvYvEYXdU+RScA9b+cJFS/b/snI" crossorigin="anonymous"></script>
 <style>
     .disguised-selector {
         position: relative;
@@ -60,9 +63,6 @@
     }
 </style>
 
-<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script type="text/javascript" src="//cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
-<link rel="stylesheet" href="//cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css">
 
 <script>
     $(document).ready(function () {
@@ -224,37 +224,32 @@
 
         updateData();
 
+        DataTable.type('num', 'className', 'dt-left');
+        DataTable.type('num-fmt', 'className', 'dt-left');
+        DataTable.type('date', 'className', 'dt-left');
 
-        $('#mcd-raptors').DataTable({
+        let raptorsTable = new DataTable('#mcd-raptors', {
             fixedColumns: true,
+            fixedHeader: {
+                header: true,
+                footer: true
+            },
             scrollX: true,
-            scrollCollapse: true,
-            paging: false,
-            ordering: false,
-            info: false
-        });
-        $('#mcd-raptors-new').DataTable({
-            fixedColumns: true,
-            scrollX: true,
-            scrollCollapse: true,
-            paging: false,
-            ordering: false,
-            info: false
-        });
-        $('#mcd-non-raptors').DataTable({
-            fixedColumns: true,
-            scrollX: true,
-            scrollCollapse: true,
             paging: false,
             ordering: false,
             info: false
         });
 
+        let nonraptorsTable = new DataTable('#mcd-non-raptors', {
+            fixedColumns: true,
+            scrollX: true,
+            scrollCollapse: true,
+            paging: false,
+            ordering: false,
+            info: false
+        })
     });
 </script>
-<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" type="text/css"
-    href="//cdn.datatables.net/fixedcolumns/3.2.6/css/fixedColumns.dataTables.min.css" />
 <style>
     #migration-count-data-daily div.Index-page-content,
     #migration-count-data-current-season-total div.Index-page-content,
