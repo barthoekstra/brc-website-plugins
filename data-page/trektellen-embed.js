@@ -8,15 +8,11 @@
 		var trektellen_count_sites = [trektellen_site];
 	}
 
-	jQuery.each(trektellen_count_sites, function( i, site ) {
-		document.write("<div class=\"trektellen\" id='trektellencountdiv_" + site + "'></div>")
-	});
-
 	$(document).ready(function(){
 		$.ajaxSetup({
 			cache: false
 		});
-		jQuery.each( trektellen_count_sites, function( i, site ) {
+		jQuery.each( trektellen_count_sites, function(i, site) {
 			trektellen_get_count("", site);
 		});
 	});
