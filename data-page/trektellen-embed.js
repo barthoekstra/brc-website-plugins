@@ -25,7 +25,20 @@
 				console.log("Error loading Trektellen data");
 			}),
 			success: (function (result) {
-				$("#trektellencountdiv_" + site).innerHTML("<p>" + result.count + "</p>");
+				$("#trektellencountdiv_" + site).html("<p>" + result.count + "</p>");
+				$("#trektellencountdiv_" + site + " h1.left").each(function() {
+    				var html = $(this).html();
+    				var parts = html.split("<br>");
+    				if (parts.length > 1) {
+        				$(this).html(parts[1].trim()); // Keep after <br>
+    				}
+    				$(this).css("line-height", "").css("margin", "5px 0 5px 0");
+				});
+				$("#trektellencountdiv_" + site + "p:first").remove() // First remove empty <p>
+				$("#trektellencountdiv_" + site + "p:first").css({
+    				"margin-top": "0",
+    				"margin-bottom": "0"
+				});
 				$("#trektellencountdiv_" + site + " select").attr("onchange", "trektellen_get_count($('#trektellencountdiv_" + site + " select').val(),'" + site + "')");
 			})
 		});
