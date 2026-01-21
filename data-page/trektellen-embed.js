@@ -18,7 +18,7 @@
 	});
 	function trektellen_get_count(trektellen_date, site){
 		$.ajax({
-			url: 'https://trektellen.org/count/view/' + site + '/' + trektellen_date + '?a=1&language=' + trektellen_lang,
+			url: 'https://trektellen.nl/count/view/' + site + '/' + trektellen_date + '?a=1&language=' + trektellen_lang,
 			dataType: 'jsonp',
 			jsonpCallback: "species_count_" + site,
 			error: (function () {
