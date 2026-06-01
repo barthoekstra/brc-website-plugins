@@ -10,9 +10,6 @@ import { PortalContainerContext } from "@/lib/portal";
 
 type View = "modern" | "classic";
 
-/** If a viewer hasn't loaded any counts within this long, degrade to the next. */
-const LOAD_TIMEOUT_MS = 20000;
-
 export default function App({ container }: { container?: HTMLElement | null }) {
   const tt = useTrektellen();
   const allIds = tt.sites.map((s) => s.id);
@@ -23,28 +20,34 @@ export default function App({ container }: { container?: HTMLElement | null }) {
   const [classicOpened, setClassicOpened] = useState(false);
 
   // Graceful degradation: modern -> classic -> direct Trektellen links.
+  // It's driven by *failure*, not slowness: a station only counts as failed once
+  // its request errors or never responds (see NO_RESPONSE_MS in trektellen.ts).
+  // A slow-but-working connection just keeps showing the loading state.
   // Only auto-degrades on the initial load; a manual toggle opts out.
   const [autoDegrade, setAutoDegrade] = useState(true);
-  const [classicReady, setClassicReady] = useState(false);
+  const [classicFailed, setClassicFailed] = useState(false);
   const [linksFallback, setLinksFallback] = useState(false);
-  const modernReady = tt.sites.some((s) => !!tt.state[s.id]?.data);
 
-  // Modern too slow → switch to Classic.
+  // Modern has definitively failed only once every station finished loading and
+  // none produced data (i.e. no response). Partial success is not a failure.
+  const modernSettled = tt.sites.every((s) => !tt.state[s.id]?.loading);
+  const modernHasData = tt.sites.some((s) => !!tt.state[s.id]?.data);
+  const modernFailed = modernSettled && !modernHasData;
+
+  // Modern got no response → switch to Classic.
   useEffect(() => {
-    if (!autoDegrade || view !== "modern" || modernReady) return;
-    const t = window.setTimeout(() => {
+    if (autoDegrade && view === "modern" && modernFailed) {
       setClassicOpened(true);
       setView("classic");
-    }, LOAD_TIMEOUT_MS);
-    return () => window.clearTimeout(t);
-  }, [autoDegrade, view, modernReady]);
+    }
+  }, [autoDegrade, view, modernFailed]);
 
-  // Classic too slow → fall back to direct links.
+  // Classic got no response → fall back to direct links.
   useEffect(() => {
-    if (!autoDegrade || view !== "classic" || classicReady) return;
-    const t = window.setTimeout(() => setLinksFallback(true), LOAD_TIMEOUT_MS);
-    return () => window.clearTimeout(t);
-  }, [autoDegrade, view, classicReady]);
+    if (autoDegrade && view === "classic" && classicFailed) {
+      setLinksFallback(true);
+    }
+  }, [autoDegrade, view, classicFailed]);
 
   const pickView = (v: View) => {
     setAutoDegrade(false); // a manual choice opts out of auto-degradation
@@ -156,7 +159,7 @@ export default function App({ container }: { container?: HTMLElement | null }) {
       {/* Classic viewer — lazily mounted, then kept alive to avoid refetching */}
       {classicOpened && (
         <div className={cn(view !== "classic" && "hidden")}>
-          <LegacyViewer onReady={() => setClassicReady(true)} />
+          <LegacyViewer onAllFailed={() => setClassicFailed(true)} />
         </div>
       )}
         </>

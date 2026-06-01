@@ -63,11 +63,37 @@ export interface CountData {
 const BASE = "https://trektellen.org/count/view";
 const LANG = "english";
 
+/**
+ * How long to wait for a response before treating a request as "no response".
+ * Generous on purpose: a slow connection should still succeed and show data —
+ * only a genuine non-response should fail. (A truly unreachable Trektellen fails
+ * much faster than this, via the script's onerror.)
+ */
+const NO_RESPONSE_MS = 30000;
+
+/* --------------------------------------------------- failure simulation hook */
+
+/**
+ * Opt-in testing flag, read from the page URL, to preview the fallbacks:
+ *   ?brc-fail=modern → the modern viewer gets no response (→ classic)
+ *   ?brc-fail=all    → modern AND classic get no response (→ direct links)
+ * Dormant unless the query param is present, so it's safe to ship.
+ */
+function simulateNoResponse(layer: "modern" | "classic"): boolean {
+  if (typeof location === "undefined") return false;
+  const v = new URLSearchParams(location.search).get("brc-fail");
+  return !!v && (v === "1" || v === "all" || v === layer);
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((r) => window.setTimeout(r, ms));
+}
+
 /* ------------------------------------------------------------------ JSONP */
 
 let jsonpCounter = 0;
 
-function jsonp<T = unknown>(url: string, timeoutMs = 15000): Promise<T> {
+function jsonp<T = unknown>(url: string, timeoutMs = NO_RESPONSE_MS): Promise<T> {
   return new Promise((resolve, reject) => {
     const cb = `__brc_tt_cb_${jsonpCounter++}`;
     const sep = url.includes("?") ? "&" : "?";
@@ -279,6 +305,10 @@ export async function fetchCount(
   site: string,
   date = "",
 ): Promise<CountData | null> {
+  if (simulateNoResponse("modern")) {
+    await wait(1500);
+    return null;
+  }
   const url = `${BASE}/${site}/${date}?a=1&language=${LANG}`;
   let res: { count?: string };
   try {
@@ -300,6 +330,10 @@ export async function fetchCountHtml(
   site: string,
   date = "",
 ): Promise<string | null> {
+  if (simulateNoResponse("classic")) {
+    await wait(1500);
+    return null;
+  }
   const url = `${BASE}/${site}/${date}?a=1&language=${LANG}`;
   try {
     const res = await jsonp<{ count?: string }>(url);

@@ -11,14 +11,15 @@ import { SITES } from "@/hooks/useTrektellen";
  * It fetches lazily: the network requests only happen while this component is
  * mounted, so the classic view costs nothing until the user actually opens it.
  */
-export function LegacyViewer({ onReady }: { onReady?: () => void }) {
+export function LegacyViewer({ onAllFailed }: { onAllFailed?: () => void }) {
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
+  const onAllFailedRef = useRef(onAllFailed);
+  onAllFailedRef.current = onAllFailed;
 
   useEffect(() => {
     let active = true;
-    let reported = false;
 
-    const wire = (node: HTMLElement, site: string) => {
+    function wire(node: HTMLElement, site: string) {
       node.querySelectorAll("select").forEach((sel) => {
         sel.addEventListener("change", () =>
           load(site, (sel as HTMLSelectElement).value),
@@ -39,31 +40,42 @@ export function LegacyViewer({ onReady }: { onReady?: () => void }) {
             });
           }
         });
-    };
+    }
 
-    const load = async (site: string, date: string) => {
-      const html = await fetchCountHtml(site, date);
-      if (!active) return;
+    /** Render fetched HTML into a site's container. Returns true on success. */
+    function render(site: string, html: string | null): boolean {
       const node = refs.current[site];
-      if (!node) return;
+      if (!node) return false;
       if (!html) {
         node.innerHTML =
           '<p class="brc-legacy-empty">No count available for this date.</p>';
-        return;
+        return false;
       }
       node.innerHTML = html;
       wire(node, site);
-      if (!reported) {
-        reported = true;
-        onReady?.();
-      }
-    };
+      return true;
+    }
 
-    SITES.forEach((s) => void load(s.id, ""));
+    async function load(site: string, date: string) {
+      const html = await fetchCountHtml(site, date);
+      if (active) render(site, html);
+    }
+
+    // Initial load of all sites, tracking failures so the parent can fall back
+    // to direct links if Trektellen never responds for any of them.
+    let done = 0;
+    let succeeded = 0;
+    SITES.forEach(async (s) => {
+      const html = await fetchCountHtml(s.id, "");
+      if (!active) return;
+      done += 1;
+      if (render(s.id, html)) succeeded += 1;
+      if (done === SITES.length && succeeded === 0) onAllFailedRef.current?.();
+    });
+
     return () => {
       active = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
