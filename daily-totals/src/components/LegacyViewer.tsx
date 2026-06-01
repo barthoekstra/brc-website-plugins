@@ -11,11 +11,12 @@ import { SITES } from "@/hooks/useTrektellen";
  * It fetches lazily: the network requests only happen while this component is
  * mounted, so the classic view costs nothing until the user actually opens it.
  */
-export function LegacyViewer() {
+export function LegacyViewer({ onReady }: { onReady?: () => void }) {
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     let active = true;
+    let reported = false;
 
     const wire = (node: HTMLElement, site: string) => {
       node.querySelectorAll("select").forEach((sel) => {
@@ -52,12 +53,17 @@ export function LegacyViewer() {
       }
       node.innerHTML = html;
       wire(node, site);
+      if (!reported) {
+        reported = true;
+        onReady?.();
+      }
     };
 
     SITES.forEach((s) => void load(s.id, ""));
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

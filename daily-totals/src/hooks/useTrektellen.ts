@@ -33,7 +33,7 @@ export const SITES: SiteDef[] = [
     subtitle: "Station 2",
     image: `${CDN}/314292c9-0924-46a6-9c34-d1342e6872e1/20240921T0832-AutumnReport-Bart_Hoekstra-001-Web.jpg?format=1000w`,
     // Shuamta: move the image up.
-    imagePosition: "center 25%",
+    imagePosition: "center 10%",
   },
   {
     id: "5026",
