@@ -32,11 +32,11 @@ interface CountSiteCardProps {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg bg-primary px-3 py-2.5">
+    <div className="flex flex-col gap-1 rounded-lg bg-primary px-2.5 py-2.5">
       <span className="font-display text-2xl leading-none tabular-nums text-primary-foreground">
         {value}
       </span>
-      <span className="text-[0.7rem] uppercase tracking-wide text-primary-foreground/80">
+      <span className="whitespace-nowrap text-[0.625rem] uppercase tracking-normal text-primary-foreground/80">
         {label}
       </span>
     </div>
