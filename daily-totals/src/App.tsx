@@ -31,10 +31,7 @@ export default function App({ container }: { container?: HTMLElement | null }) {
       {/* Section header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-4xl uppercase leading-none tracking-[0.01em]">
-            Daily Totals
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Live counts from the three Batumi watchpoints, straight from{" "}
             <a
               href="https://www.trektellen.org"

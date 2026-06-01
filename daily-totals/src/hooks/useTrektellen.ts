@@ -98,7 +98,8 @@ export function useTrektellen(): UseTrektellen {
   const availRef = useRef(availability);
   const monthsRef = useRef(monthsIndex);
   const lockedRef = useRef(locked);
-  const inflight = useRef(new Set<string>()); // "site:ym" availability fetches
+  // "site:ym" -> in-flight availability fetch (deduped, awaited by all callers)
+  const inflight = useRef(new Map<string, Promise<string[]>>());
   // The date the user most recently navigated to (any station). When the lock
   // is switched on, every station snaps to this date.
   const lastTouchedDate = useRef<string>("");
@@ -152,45 +153,47 @@ export function useTrektellen(): UseTrektellen {
     [setSite, absorbMeta],
   );
 
-  /** Ensure we know which days in a month have counts (without changing display). */
+  /**
+   * Ensure we know which days in a month have counts (without changing display).
+   *
+   * IMPORTANT: only a successful, non-empty result is ever cached. A transient
+   * fetch failure must NOT be cached as `[]` — otherwise (especially under the
+   * date lock) that site/month would be stuck showing "no count" forever, even
+   * though counts exist. Treating an empty cache as "unknown" means the state
+   * self-heals on the next navigation.
+   */
   const ensureMonthAvailability = useCallback(
     async (site: string, ym: string): Promise<string[]> => {
       const cached = availRef.current[site]?.[ym];
-      if (cached) return cached;
+      if (cached && cached.length) return cached;
 
       const months = monthsRef.current[site];
-      // The months index isn't loaded yet (initial render). Don't cache anything
-      // — returning here lets this month be resolved again once data arrives,
-      // instead of poisoning the cache with an empty result.
+      // Months index not loaded yet, or this month genuinely has no data for
+      // this site — return empty without caching (and without a network call).
       if (!months || months.length === 0) return [];
-
       const opt = months.find((m) => monthKeyOf(m) === ym);
-      const writeAvail = (days: string[]) => {
-        setAvailabilityMap((prev) => {
-          const forSite = { ...(prev[site] ?? {}), [ym]: days };
-          const next = { ...prev, [site]: forSite };
-          availRef.current = next;
-          return next;
-        });
-      };
+      if (!opt) return [];
 
-      if (!opt) {
-        writeAvail([]); // month genuinely has no data; cache empty
-        return [];
-      }
-
+      // Dedupe concurrent requests by awaiting the same in-flight promise, so a
+      // racing caller gets the real result rather than a premature empty array.
       const key = `${site}:${ym}`;
-      if (inflight.current.has(key)) return cached ?? [];
-      inflight.current.add(key);
-      const data = await fetchCount(site, opt.value);
-      inflight.current.delete(key);
+      const existing = inflight.current.get(key);
+      if (existing) return existing;
 
-      if (data) {
-        absorbMeta(site, data);
-        return availRef.current[site]?.[ym] ?? data.availableDays;
+      const promise = (async () => {
+        const data = await fetchCount(site, opt.value);
+        if (data) {
+          absorbMeta(site, data);
+          return availRef.current[site]?.[ym] ?? data.availableDays;
+        }
+        return []; // transient failure — not cached, retried next time
+      })();
+      inflight.current.set(key, promise);
+      try {
+        return await promise;
+      } finally {
+        inflight.current.delete(key);
       }
-      writeAvail([]);
-      return [];
     },
     [absorbMeta],
   );
