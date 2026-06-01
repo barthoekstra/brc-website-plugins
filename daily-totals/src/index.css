@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/*
+  shadcn/ui design tokens (Tailwind v4 flavour).
+  Brand accent (--primary) is tuned to the Batumi Raptor Count green.
+
+  The tokens live on BOTH the widget root (#brc-daily-totals) and `.brc-portal`.
+  Radix renders popovers/calendars in a portal attached to <body>, OUTSIDE the
+  widget root, so without re-declaring the tokens there those elements would have
+  no background or accent colours. We add `.brc-portal` to every portaled
+  surface so it carries the theme with it.
+*/
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+#brc-daily-totals,
+.brc-portal {
+  /* BRC buttons on the live site use ~6px corners. */
+  --radius: 0.5rem;
+
+  /*
+    Font stacks resolve to the Adobe/Typekit faces already loaded on the BRC
+    Squarespace page once embedded; the fallbacks only matter in local preview.
+  */
+  --font-body: "aktiv-grotesk", "Hanken Grotesk", system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "aktiv-grotesk-condensed", "Archivo Narrow", "Oswald",
+    "Arial Narrow", var(--font-body);
+
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 12%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 12%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 12%);
+
+  /* Batumi Raptor Count green — exact site token #4a9147 */
+  --primary: hsl(117.57 34.26% 42.35%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(120 14% 96%);
+  --secondary-foreground: hsl(0 0% 23%);
+  --muted: hsl(120 8% 96%);
+  --muted-foreground: hsl(0 0% 42%);
+  /* Light green wash used for hovers and "day has a count" in the calendar. */
+  --accent: hsl(117 33% 92%);
+  --accent-foreground: hsl(117.57 38% 26%);
+
+  --destructive: hsl(4 74% 49%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --border: hsl(120 10% 90%);
+  --input: hsl(120 10% 88%);
+  --ring: hsl(117.57 34.26% 42.35%);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/*
+  Scope a sensible baseline to our root only, so the widget looks consistent
+  regardless of the host page's CSS reset / typography.
+*/
+#brc-daily-totals,
+.brc-portal {
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+}
+
+/* Condensed display type for station names, the section title and big numbers. */
+#brc-daily-totals .font-display,
+.brc-portal .font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+:is(#brc-daily-totals, .brc-portal) *,
+:is(#brc-daily-totals, .brc-portal) *::before,
+:is(#brc-daily-totals, .brc-portal) *::after {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
+
+/* Classic (legacy) Trektellen embed — light styling for the raw markup. */
+#brc-daily-totals .brc-legacy {
+  font-size: 0.875rem;
+}
+#brc-daily-totals .brc-legacy table {
+  border-collapse: collapse;
+}
+#brc-daily-totals .brc-legacy td {
+  padding: 1px 6px 1px 0;
+  vertical-align: top;
+}
+#brc-daily-totals .brc-legacy h1 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0.5rem;
+}
+#brc-daily-totals .brc-legacy select {
+  padding: 4px 6px;
+  margin-bottom: 8px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+}
+#brc-daily-totals .brc-legacy a {
+  color: var(--primary);
+  cursor: pointer;
+}
+#brc-daily-totals .brc-legacy a:hover {
+  text-decoration: underline;
+}
+#brc-daily-totals .brc-legacy .count_period,
+#brc-daily-totals .brc-legacy .count_type,
+#brc-daily-totals .brc-legacy .count_weather,
+#brc-daily-totals .brc-legacy .count_observers,
+#brc-daily-totals .brc-legacy .count_remarks {
+  font-weight: 600;
+}
+#brc-daily-totals .brc-legacy center {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+/* Local preview page chrome only (ignored once embedded). */
+body {
+  margin: 0;
+  background: oklch(0.985 0.003 250);
+}
