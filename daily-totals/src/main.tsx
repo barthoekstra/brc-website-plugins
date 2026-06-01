@@ -16,6 +16,21 @@ function init() {
   if (!host || host.dataset.brcMounted === "true") return;
   host.dataset.brcMounted = "true";
 
+  // `@property` rules are ignored inside a Shadow DOM, which would break
+  // Tailwind v4 utilities that depend on registered custom properties (the
+  // Switch's translate, rings, shadows, gradients...). Register them once in the
+  // document head — @property only declares property *types*, so it can't affect
+  // the host page's appearance.
+  if (!document.getElementById("brc-daily-totals-props")) {
+    const propRules = cssText.match(/@property[^{]+\{[^}]*\}/g);
+    if (propRules) {
+      const propStyle = document.createElement("style");
+      propStyle.id = "brc-daily-totals-props";
+      propStyle.textContent = propRules.join("");
+      document.head.appendChild(propStyle);
+    }
+  }
+
   const shadow = host.attachShadow({ mode: "open" });
 
   const style = document.createElement("style");

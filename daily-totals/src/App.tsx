@@ -27,7 +27,7 @@ export default function App({ container }: { container?: HTMLElement | null }) {
 
   return (
     <PortalContainerContext.Provider value={container ?? null}>
-    <div className="mx-auto w-full max-w-7xl px-4 py-8">
+    <div className="w-full px-4 py-8">
       {/* Section header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>

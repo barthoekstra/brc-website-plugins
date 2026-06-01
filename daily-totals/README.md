@@ -111,3 +111,14 @@ Rebuild, commit, and bump the tag (`daily-totals-v2`, …) — then change the
 version in the code block. (Using a tag instead of `@main` avoids jsDelivr's
 up-to-7-day branch cache and means the embed never changes under you until you
 choose to.)
+
+### Gotcha: "Failed to fetch version info"
+
+If jsDelivr returns this right after you make the repo public or push a new tag,
+it has negatively cached the earlier failure (it can take up to ~an hour to
+clear). Two ways around it:
+
+- Use the **commit-SHA** form of the URL, which skips version resolution and is
+  immune to that cache (also immutable, so ideal for embedding):
+  `https://cdn.jsdelivr.net/gh/barthoekstra/brc-website-plugins@<commit-sha>/daily-totals/embed/brc-daily-totals.js`
+- Or just wait for the cache to expire and the `@tag` URL resolves itself.
